@@ -3,7 +3,7 @@ import packageJson from '../../package.json'
 
 export let config: Configstore
 
-export async function initConfig () {
+export async function initConfig (): Promise<void> {
   config = new Configstore(packageJson.name)
 }
 

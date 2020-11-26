@@ -1,57 +1,72 @@
-import { startCase, truncate } from "lodash"
-import inquirer from "inquirer"
-import { blue, bold } from 'kleur'
-import { moveCard, useApi } from "../core/api"
-import { useContext } from "../core/context"
-import { pushLatest, useRepo } from "../core/repo"
-import { formatTitle } from "../core/utils"
+import { startCase, truncate } from 'lodash'
+import inquirer from 'inquirer'
+import { moveCard, useApi } from '../core/api'
+import { useContext } from '../core/context'
+import { pushLatest, useRepo } from '../core/repo'
+import { formatTitle } from '../core/utils'
 import Listr from 'listr'
 import console from 'consola'
-import Choice from "inquirer/lib/objects/choice"
+import Choice from 'inquirer/lib/objects/choice'
 import Debounce from 'p-debounce'
+import commit from './commit'
+import { CancelError } from '../core/error'
+import {
+  blue,
+  bold,
+  green,
+} from 'kleur'
 
 interface Issue {
   iid: number
   title: string
   type: string
   branch: string
+  active: boolean
 }
 
 async function searchIssue (keyword?: string): Promise<Choice[]> {
-  const context = useContext()
-  const params: Record<string, any> = {
+  const context                         = useContext()
+  const parameters: Record<string, any> = {
     projectId        : context.projectId,
     assignee_username: context.username,
     state            : 'opened',
   }
 
   if (keyword)
-    params.search = keyword
+    parameters.search = keyword
 
-  const repo  = useRepo()
-  const refs  = await repo.getReferences()
-  const regex = /refs\/heads\/((feature|hotfix)\/(\d+)-([\w-]+))/
+  const repo       = useRepo()
+  const references = await repo.getReferences()
+  const current    = await repo.getCurrentBranch()
+  const regex      = /refs\/heads\/((feature|hotfix)\/(\d+)-([\w-]+))/
 
   const indexes: Map<number, Issue> = new Map()
 
-  for (const ref of refs) {
-    const match = regex.exec(ref.name())
+  for (const reference of references) {
+    const match = regex.exec(reference.name())
 
     if (match) {
       const branch = match[1]
       const type   = match[2]
       const iid    = Number.parseInt(match[3])
       const title  = startCase(match[4])
+      const active = current.name() === reference.name()
 
-      indexes.set(iid, { branch, iid, type, title })
+      indexes.set(iid, {
+        branch,
+        iid,
+        type,
+        title,
+        active,
+      })
     }
   }
 
   if (indexes.size > 0)
-    params.iids = Array.from(indexes.keys())
+    parameters.iids = [...indexes.keys()]
 
   const api    = useApi()
-  const issues = await api.Issues.all(params)
+  const issues = await api.Issues.all(parameters)
 
   if (!Array.isArray(issues))
     return []
@@ -61,9 +76,10 @@ async function searchIssue (keyword?: string): Promise<Choice[]> {
     const title          = issue.title as string ?? item?.title
     const milestone      = (issue.milestone as Record<string, any>)?.title
     const value          = { ...item, issue }
-    const name           = milestone ? `(${milestone}) ${title}`: title
+    const name           = milestone ? `(${milestone}) ${title}` : title
+    const flag           = item?.active ? green('[CURRENT]') : ''
     const choice: Choice = {
-      name    : `#${issue.iid} ${name}`,
+      name    : `#${issue.iid} ${name} ${flag}`.trim(),
       short   : issue.iid as string,
       value   : value,
       disabled: false,
@@ -74,10 +90,10 @@ async function searchIssue (keyword?: string): Promise<Choice[]> {
 }
 
 async function searchMaintainer (keyword?: string): Promise<Choice[]> {
-  const api     = useApi()
-  const context = useContext()
-  const params  = keyword ? { query: keyword } : {}
-  const members = await api.ProjectMembers.all(context.projectId, params)
+  const api        = useApi()
+  const context    = useContext()
+  const parameters = keyword ? { query: keyword } : {}
+  const members    = await api.ProjectMembers.all(context.projectId, parameters)
 
   if (!Array.isArray(members))
     return []
@@ -99,7 +115,7 @@ async function searchMaintainer (keyword?: string): Promise<Choice[]> {
     })
 }
 
-export async function mergeRequest (issue: Issue, assigneeId: number) {
+async function mergeRequest (issue: Issue, assigneeId: number): Promise<void> {
   const api     = useApi()
   const context = useContext()
   const title   = formatTitle(issue.title)
@@ -112,11 +128,21 @@ export async function mergeRequest (issue: Issue, assigneeId: number) {
   await api.MergeRequests.create(context.projectId, issue.branch, 'develop', title, body)
 }
 
-export async function hasOpenedMR (issue: Issue): Promise<boolean> {
+async function hasChanges (): Promise<boolean> {
+  try {
+    const repo  = useRepo()
+    const files = await repo.getStatus()
+
+    return files.length > 0
+  } catch {
+    return false
+  }
+}
+
+async function hasOpenedMR (issue: Issue): Promise<boolean> {
   const api     = useApi()
   const context = useContext()
-
-  const mrs = await api.Issues.relatedMergeRequests(context.projectId, issue.iid)
+  const mrs     = await api.Issues.relatedMergeRequests(context.projectId, issue.iid)
 
   if (!Array.isArray(mrs))
     return true
@@ -124,8 +150,22 @@ export async function hasOpenedMR (issue: Issue): Promise<boolean> {
   return mrs.some((mr) => mr.state === 'opened')
 }
 
-export default async function finishTask () {
-  const result  = await inquirer.prompt([
+export default async function finishTask (): Promise<void> {
+  if (await hasChanges()) {
+    const answer = await inquirer.prompt([
+      {
+        name   : 'commit',
+        type   : 'confirm',
+        message: 'You have uncommited files, do you want commit it first?',
+        default: true,
+      },
+    ])
+
+    if (answer.commit)
+      await commit()
+  }
+
+  const answer = await inquirer.prompt([
     {
       name   : 'issue',
       type   : 'autocomplete',
@@ -146,39 +186,43 @@ export default async function finishTask () {
         const title = blue(truncate(answers.issue.title, { length: 45 }))
 
         return `Are you sure finish task "${title}"`
-      }
-    }
+      },
+    },
   ])
 
-  if (!result.confirm)
-    return process.exit(0)
+  if (!answer.confirm)
+    throw new CancelError()
 
-  const hasMR   = await hasOpenedMR(result.issue)
-  const canMove = result.issue.issue.labels.includes('Doing')
+  const hasMR   = await hasOpenedMR(answer.issue)
+  const canMove = answer.issue.issue.labels.includes('Doing')
   const tasks   = new Listr([
     {
       title: 'Push to remote repository',
-      task : () => pushLatest(result.issue.branch),
+      task : () => pushLatest(answer.issue.branch),
     },
     {
       title: 'Create merge request',
-      task : () => mergeRequest(result.issue, result.maintainer.id),
+      task : () => mergeRequest(answer.issue, answer.maintainer.id),
       skip : () => {
         if (hasMR)
           return 'Merge Request already created'
-      }
+      },
     },
     {
       title: 'Move card to "Undeployed"',
-      task : () => moveCard(result.issue.issue, 'Doing', 'Undeployed'),
+      task : () => moveCard(answer.issue.issue, 'Doing', 'Undeployed'),
       skip : () => {
         if (!canMove)
           return 'Card can\'t be move to "Undeployed" board'
-      }
-    }
+      },
+    },
   ])
 
-  await tasks.run()
+  try {
+    await tasks.run()
 
-  console.success(bold('Done'))
+    console.success(bold('Done'))
+  } catch (error) {
+    console.error(error.message)
+  }
 }

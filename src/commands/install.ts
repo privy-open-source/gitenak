@@ -1,9 +1,11 @@
 import inquirer from 'inquirer'
 import boxen from 'boxen'
 import figures from 'figures'
+import console from 'consola'
 import { testApi } from '../core/api'
 import { config } from '../core/config'
 import { validURL } from '../core/utils'
+import { bold } from 'kleur'
 
 function installMessage (host: string): string {
   const message = `
@@ -20,7 +22,7 @@ function installMessage (host: string): string {
   return boxen(figures(message), { padding: 1 })
 }
 
-export default async function install () {
+export default async function install (): Promise<void> {
   const result = await inquirer.prompt([
     {
       name    : 'host',
@@ -40,12 +42,12 @@ export default async function install () {
           return 'Invalid personal token'
 
         return true
-      }
+      },
     },
   ])
 
   config.set('gitlab.host', result.host)
   config.set('gitlab.token', result.token)
 
-  process.stdout.write('\x1Bc')
+  console.success(bold('Install success'))
 }

@@ -1,12 +1,13 @@
-import { Gitlab } from "@gitbeaker/node"
-import { useConfig } from "./config"
-import { useContext } from "./context"
+import { Gitlab } from '@gitbeaker/node'
+import { Issue } from '../../types/gitlab'
+import { useConfig } from './config'
+import { useContext } from './context'
 
 export type GitlabApi = InstanceType<typeof Gitlab>
 
 export let api: GitlabApi
 
-export async function initApi () {
+export async function initApi (): Promise<void> {
   const config = useConfig()
 
   api = new Gitlab({
@@ -16,7 +17,6 @@ export async function initApi () {
 
   const response = await api.Users.current()
   const context  = useContext()
-
 
   if (!Array.isArray(response)) {
     context.username = response.username as string
@@ -36,22 +36,24 @@ export async function testApi (host: string, token: string): Promise<boolean> {
     return !Array.isArray(response)
       && response.username !== undefined
       && response.username !== null
-  } catch (error) {
+  } catch {
     return false
   }
 }
 
-export async function moveCard (issue: any, from: string, to: string) {
+export async function moveCard (issue: Issue, from: string, to: string): Promise<Issue> {
   const context = useContext()
   const api     = useApi()
-  const labels  = issue.labels.filter((item: string) => item !== from).concat(to)
+  const labels  = issue.labels
+    .filter((item: string) => item !== from)
+    .concat(to)
 
-  return api.Issues.edit(context.projectId, issue.iid, { labels: labels })
+  return api.Issues.edit(context.projectId, issue.iid, { labels: labels }) as Promise<unknown> as Promise<Issue>
 }
 
-export async function showIssue (issueId: number) {
+export async function showIssue (issueId: number): Promise<Issue> {
   const context = useContext()
   const api     = useApi()
 
-  return api.Issues.show(context.projectId, issueId)
+  return api.Issues.show(context.projectId, issueId) as Promise<unknown> as Promise<Issue>
 }

@@ -1,3 +1,8 @@
+
+export interface Remote {
+  url: string
+  name: string
+}
 export interface Context {
   email: string
   projectId: string
@@ -5,19 +10,14 @@ export interface Context {
   remote: Remote
 }
 
-export interface Remote {
-  url: string
-  name: string
-}
-
-export let context: Context = {
+export const context: Context = {
   email    : '',
   projectId: '',
   username : '',
   remote   : {
     url : '',
     name: 'origin',
-  }
+  },
 }
 
 export function useContext (): Context {
