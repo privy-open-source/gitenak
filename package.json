@@ -1,7 +1,7 @@
 {
   "name": "@privyid/gitenak",
   "version": "0.1.0",
-  "description": "Git enak",
+  "description": "Simple tool for PrivyID git flow",
   "main": "dist/index.js",
   "bin": {
     "gitenak": "./bin/gitenak"
@@ -19,7 +19,19 @@
     "lint": "eslint --ext js,ts --ignore-path .gitignore .",
     "fix": "eslint --ext js,ts --ignore-path .gitignore . --fix"
   },
-  "author": "",
+  "files": [
+    "bin/",
+    "dist/"
+  ],
+  "author": {
+    "name": "Ade Novid",
+    "email": "adenvt@gmail.com",
+    "url": "https://adenov.id"
+  },
+  "repository": {
+    "url": "https://github.com/privy-open-source/gitenak",
+    "type": "git"
+  },
   "license": "MIT",
   "devDependencies": {
     "@babel/cli": "^7.12.1",
