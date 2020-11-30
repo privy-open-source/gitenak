@@ -1,18 +1,16 @@
 # Git Enak
 
-## How to use
-### 1. Installation
+## Install
 
 ```bash
 npm install -g @privyid/gitenak
 ```
 
-### 2. Run in terminal / console for first time
+## Usage
+Just run it on terminal / console and follow the instruction.
 ```bash
 gitenak
 ```
 
-### 3. Follow the instruction
-
 ## License
-MIT © PT. Privy Indentitas Digital
+MIT © PT.Privy Indentitas Digital
