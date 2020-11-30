@@ -1,4 +1,14 @@
-import inquirer from 'inquirer'
+import inquirer, { Separator } from 'inquirer'
+
+export const menus = [
+  { name: 'Start Task', value: 'start-task' },
+  { name: 'Finish Task', value: 'finish-task' },
+  new Separator(),
+  { name: 'Commit Change', value: 'commit' },
+  { name: 'Discard Change', value: 'discard' },
+  new Separator(),
+  { name: 'Quit', value: 'quit' },
+]
 
 export default async function mainMenu (): Promise<void> {
   const result = await inquirer.prompt([
@@ -7,12 +17,7 @@ export default async function mainMenu (): Promise<void> {
       name   : 'menu',
       message: 'What do you want??',
       loop   : false,
-      choices: [
-        { name: 'Start Task', value: 'start-task' },
-        { name: 'Finish Task', value: 'finish-task' },
-        { name: 'Commit', value: 'commit' },
-        { name: 'Quit', value: 'quit' },
-      ],
+      choices: menus,
     },
   ])
 

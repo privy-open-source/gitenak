@@ -1,6 +1,3 @@
-import { renderStatus } from '../core/utils'
-import path from 'path'
-import Choice from 'inquirer/lib/objects/choice'
 import inquirer from 'inquirer'
 import {
   blue,
@@ -13,29 +10,10 @@ import LintStaged from 'lint-staged'
 import {
   commitFile,
   stageFile,
-  useRepo,
 } from '../core/repo'
 import { truncate } from 'lodash'
 import { CancelError } from '../core/error'
-
-export async function searchFiles (): Promise<Choice[]> {
-  const repo  = useRepo()
-  const files = await repo.getStatus()
-
-  return files.map((file) => {
-    const filename = path.basename(file.path())
-    const name     = file.path().replace(filename, bold(filename))
-    const status   = renderStatus(file)
-
-    return {
-      name    : `${name} ${status}`,
-      value   : file.path(),
-      short   : filename,
-      checked : false,
-      disabled: false,
-    }
-  })
-}
+import { searchFiles } from '../modules/commit'
 
 export default async function commit (): Promise<void> {
   const unstages = await searchFiles()
@@ -85,7 +63,7 @@ export default async function commit (): Promise<void> {
         const title   = blue(`${type}: ${message}`)
         const total   = green(answers.files.length)
 
-        return `Are you sure commit ${total} file(s) with message: "${title}"`
+        return `Are you sure commit ${total} file(s) with message: ${title}`
       },
     },
   ])

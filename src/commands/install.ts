@@ -1,26 +1,10 @@
 import inquirer from 'inquirer'
-import boxen from 'boxen'
-import figures from 'figures'
 import console from 'consola'
 import { testApi } from '../core/api'
 import { config } from '../core/config'
 import { validURL } from '../core/utils'
 import { bold } from 'kleur'
-
-function installMessage (host: string): string {
-  const message = `
-  How to create Personal Token:
-  1. goto ${host}/profile/personal_access_tokens
-  2. create token with following setting:
-    - Name: (whatever)
-    - Expires at: (blank)
-    - Scope:
-      ☒ api
-      ☒ read_user
-  `.trim()
-
-  return boxen(figures(message), { padding: 1 })
-}
+import { installMessage } from '../modules/install'
 
 export default async function install (): Promise<void> {
   const result = await inquirer.prompt([

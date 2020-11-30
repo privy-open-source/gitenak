@@ -4,6 +4,7 @@ import {
   cyan,
   green,
   grey,
+  magenta,
   red,
   yellow,
 } from 'kleur'
@@ -21,6 +22,37 @@ export function validURL (string: string): boolean {
     + '(\\#[-a-z\\d_]*)?$', 'i') // fragment locator
 
   return !!pattern.test(string)
+}
+
+export function renderLabel (labels: string[]): string {
+  return labels.map((label) => {
+    switch (label) {
+      case 'High':
+      case 'Bug':
+        return red(`[${label}]`)
+
+      case 'To Do':
+        return yellow(`[${label}]`)
+
+      case 'Doing':
+      case 'Feature':
+        return green(`[${label}]`)
+
+      case 'QA':
+      case 'In Review':
+      case 'Revise':
+        return blue(`[${label}]`)
+
+      case 'Undeployed':
+        return magenta(`[${label}]`)
+
+      case 'Low':
+        return grey(`[${label}]`)
+
+      default:
+        return `[${label}]`
+    }
+  }).join('')
 }
 
 export function renderStatus (status: StatusFile): string {

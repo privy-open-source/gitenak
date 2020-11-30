@@ -58,7 +58,6 @@
     "figures": "^3.2.0",
     "inquirer": "^7.3.3",
     "inquirer-autocomplete-prompt": "^1.3.0",
-    "inquirer-search-list": "^1.2.6",
     "kleur": "^4.1.3",
     "lint-staged": "^10.5.2",
     "listr": "^0.14.3",

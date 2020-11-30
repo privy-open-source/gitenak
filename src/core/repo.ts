@@ -1,8 +1,13 @@
-import {
-  Repository, Cred, FetchOptions, Reference, Signature,
-} from 'nodegit'
 import { useContext } from './context'
 import { useConfig } from './config'
+import {
+  Repository,
+  Cred,
+  FetchOptions,
+  Reference,
+  Signature,
+  Reset,
+} from 'nodegit'
 
 export let repo: Repository
 
@@ -78,32 +83,16 @@ export async function hasBranch (name: string): Promise<boolean> {
   }
 }
 
-export async function startFeature (name: string): Promise<void> {
-  await pullLatest('develop')
+export async function startBranch (prefix: string, name: string, sourceBranch: string): Promise<void> {
+  await pullLatest(sourceBranch)
 
-  const branch  = `feature/${name}`
-  const commit  = await repo.getBranchCommit('develop')
+  const branch  = `${prefix}/${name}`
+  const commit  = await repo.getBranchCommit(sourceBranch)
   const isExist = await hasBranch(branch)
 
   // eslint-disable-next-line unicorn/prefer-ternary
   if (isExist)
-    await repo.mergeBranches(branch, 'develop')
-  else
-    await repo.createBranch(branch, commit, false)
-
-  await repo.checkoutBranch(branch)
-}
-
-export async function startHotfix (name: string): Promise<void> {
-  await pullLatest('master')
-
-  const branch  = `hotfix/${name}`
-  const commit  = await repo.getBranchCommit('master')
-  const isExist = await hasBranch(branch)
-
-  // eslint-disable-next-line unicorn/prefer-ternary
-  if (isExist)
-    await repo.mergeBranches(branch, 'master')
+    await repo.mergeBranches(branch, sourceBranch)
   else
     await repo.createBranch(branch, commit, false)
 
@@ -131,4 +120,14 @@ export async function commitFile (message: string): Promise<void> {
   const committer = Signature.now(username, email)
 
   await repo.createCommit('HEAD', author, committer, message, oid, [parent])
+}
+
+export async function revertFile (files: string | string[]): Promise<void> {
+  const commit = await repo.getHeadCommit()
+
+  await Reset.reset(repo, commit, Reset.TYPE.HARD, { paths: files })
+}
+
+export async function hasChanges (): Promise<boolean> {
+  return (await repo.getStatus()).length > 0
 }
