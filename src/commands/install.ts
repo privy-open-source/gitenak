@@ -1,6 +1,6 @@
 import inquirer from 'inquirer'
 import console from 'consola'
-import { testApi } from '../core/api'
+import { initApi, testApi } from '../core/api'
 import { config } from '../core/config'
 import { validURL } from '../core/utils'
 import { bold } from 'kleur'
@@ -32,6 +32,8 @@ export default async function install (): Promise<void> {
 
   config.set('gitlab.host', result.host)
   config.set('gitlab.token', result.token)
+
+  await initApi()
 
   console.success(bold('Install success'))
 }
