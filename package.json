@@ -1,6 +1,6 @@
 {
   "name": "@privyid/gitenak",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Simple tool for PrivyID git flow",
   "main": "dist/index.js",
   "bin": {
