@@ -6,8 +6,13 @@ import { validURL } from '../core/utils'
 import { bold } from 'kleur'
 import { installMessage } from '../modules/install'
 
+interface Answers {
+  host: string
+  token: string
+}
+
 export default async function install (): Promise<void> {
-  const result = await inquirer.prompt([
+  const result = await inquirer.prompt<Answers>([
     {
       name    : 'host',
       type    : 'input',
@@ -19,8 +24,8 @@ export default async function install (): Promise<void> {
       name    : 'token',
       type    : 'input',
       message : ({ host }) => `\r\n${installMessage(host)}\r\nInput your token here:`,
-      validate: async (token, { host }) => {
-        const check = await testApi(host, token)
+      validate: async (token: string, answers: Answers) => {
+        const check = await testApi(answers.host, token)
 
         if (!check)
           return 'Invalid personal token'

@@ -86,3 +86,22 @@ export interface Issue {
   _links: Links;
   task_completion_status: TaskCompletionStatus;
 }
+
+export interface GroupSamlIdentity {
+  extern_uid: string;
+  provider: string;
+  saml_provider_id: number;
+}
+
+export interface Member {
+  id: number;
+  username: string;
+  name: string;
+  state: string;
+  avatar_url: string;
+  web_url: string;
+  expires_at: Date;
+  access_level: number;
+  email: string;
+  group_saml_identity?: GroupSamlIdentity;
+}

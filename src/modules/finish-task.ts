@@ -4,14 +4,16 @@ import { useContext } from '../core/context'
 import { useRepo } from '../core/repo'
 import { formatTitle, renderLabel } from '../core/utils'
 import Choice from 'inquirer/lib/objects/choice'
+import { Issue as GitlabIssue } from '../../types/gitlab'
 import { green } from 'kleur'
 
-interface Issue {
+export interface Issue {
   iid: number
   title: string
   type: string
   branch: string
   active: boolean
+  issue: GitlabIssue
 }
 
 export async function searchIssue (keyword?: string): Promise<Choice[]> {
@@ -29,7 +31,7 @@ export async function searchIssue (keyword?: string): Promise<Choice[]> {
   const branches = await repo.branchLocal()
   const regex    = /(feature|bugfix|hotfix)\/(\d+)-([\w-]+)/
 
-  const indexes: Map<number, Issue> = new Map()
+  const indexes: Map<number, Partial<Issue>> = new Map()
 
   for (const branch of branches.all) {
     const match = regex.exec(branch)
