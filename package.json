@@ -1,6 +1,6 @@
 {
   "name": "@privyid/gitenak",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Simple tool for PrivyID git flow",
   "main": "dist/index.js",
   "bin": {
@@ -74,8 +74,8 @@
     "lint-staged": "^10.5.2",
     "listr": "^0.14.3",
     "lodash": "^4.17.20",
-    "nodegit": "^0.27.0",
     "p-debounce": "^2.1.0",
+    "simple-git": "^2.24.0",
     "update-notifier": "^5.0.1",
     "utility-types": "^3.10.0"
   },

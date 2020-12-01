@@ -8,18 +8,25 @@ import Listr from 'listr'
 import Debounce from 'p-debounce'
 import { CancelError } from '../core/error'
 import { allowMove, searchIssue } from '../modules/start-task'
+import { Issue } from '../../types/gitlab'
 import {
   blue,
   bold,
 } from 'kleur'
 
+interface Answers {
+  issue: Issue,
+  flow: 'feature' | 'bugfix' | 'hotfix'
+  confirm: boolean
+}
+
 export default async function startTask (): Promise<void> {
-  const result = await inquirer.prompt([
+  const result = await inquirer.prompt<Answers>([
     {
       name   : 'issue',
       type   : 'autocomplete',
       message: 'What issue do you want to start?',
-      source : Debounce((answers: any, keyword: string) => searchIssue(keyword), 300),
+      source : Debounce((answers, keyword: string) => searchIssue(keyword), 300),
     },
     {
       name   : 'flow',
@@ -36,7 +43,7 @@ export default async function startTask (): Promise<void> {
       name   : 'confirm',
       type   : 'confirm',
       default: false,
-      message: (answers: any) => {
+      message: (answers) => {
         const title = blue(truncate(answers.issue.title, { length: 45 }))
         const flow  = renderWorflow(answers.flow)
 

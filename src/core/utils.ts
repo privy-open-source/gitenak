@@ -1,7 +1,6 @@
-import { StatusFile } from 'nodegit'
+import { FileStatusResult } from 'simple-git'
 import {
   blue,
-  cyan,
   green,
   grey,
   magenta,
@@ -55,28 +54,36 @@ export function renderLabel (labels: string[]): string {
   }).join('')
 }
 
-export function renderStatus (status: StatusFile): string {
-  const words = []
+export function renderStatus (file: FileStatusResult): string {
+  // ' ' = unmodified
+  // M   = modified
+  // A   = added
+  // D   = deleted
+  // R   = renamed
+  // C   = copied
+  // U   = updated but unmerged
 
-  if (status.isNew())
-    words.push(green('[NEW]'))
+  switch (file.working_dir) {
+    case '?':
+    case ' ':
+    case 'A':
+      return green('[NEW]')
 
-  if (status.isModified())
-    words.push(yellow('[MODIFIED]'))
+    case 'M':
+      return yellow('[MODIFIED]')
 
-  if (status.isTypechange())
-    words.push(cyan('[TYPECHANGE]'))
+    case 'D':
+      return red('[DELETED]')
 
-  if (status.isDeleted())
-    words.push(red('[DELETED]'))
+    case 'R':
+      return blue('[RENAMED]')
 
-  if (status.isRenamed())
-    words.push(blue('[RENAMED]'))
+    case 'C':
+      return yellow('[COPIED]')
 
-  if (status.isIgnored())
-    words.push(grey('[IGNORED]'))
-
-  return words.join('')
+    default:
+      return `[${file.working_dir}]`
+  }
 }
 
 export function renderWorflow (workflow: string): string {

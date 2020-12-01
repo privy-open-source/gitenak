@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2020-12-01
+### Added
+- Command **Pull**
+- COmmand **Push**
+
+### Changed
+- `nodegit` to `simple-git`
+
+### Fixed
+- Fixed error fetching after installation (#1)
+
 ## [0.1.0] - 2020-11-30
 ### Added
 - Core functionality and Installation
@@ -15,4 +26,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command **Discard Change**
 
 [Unreleased]: https://github.com/privy-open-source/gitenak/compare/master...develop
-[0.1.0]: https://github.com/privy-open-source/gitenak/releases/tag/v0.1.0
+[0.2.0]: https://github.com/olivierlacan/keep-a-changelog/compare/0.1.0...0.2.0
+[0.1.0]: https://github.com/privy-open-source/gitenak/releases/tag/0.1.0

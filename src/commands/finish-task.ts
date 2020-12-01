@@ -7,6 +7,7 @@ import console from 'consola'
 import Debounce from 'p-debounce'
 import commit from './commit'
 import { CancelError } from '../core/error'
+import { Member } from '../../types/gitlab'
 import {
   blue,
   bold,
@@ -16,7 +17,14 @@ import {
   searchMaintainer,
   hasOpenedMR,
   mergeRequest,
+  Issue,
 } from '../modules/finish-task'
+
+interface Answers {
+  issue: Issue
+  maintainer: Member
+  confirm: boolean
+}
 
 export default async function finishTask (): Promise<void> {
   if (await hasChanges()) {
@@ -33,18 +41,18 @@ export default async function finishTask (): Promise<void> {
       await commit()
   }
 
-  const answer = await inquirer.prompt([
+  const answer = await inquirer.prompt<Answers>([
     {
       name   : 'issue',
       type   : 'autocomplete',
       message: 'What issue do you want to finish?',
-      source : Debounce((answers: any, keyword: string) => searchIssue(keyword), 300),
+      source : Debounce((answers: Answers, keyword: string) => searchIssue(keyword), 300),
     },
     {
       name   : 'maintainer',
       type   : 'autocomplete',
       message: 'Assign MR to?',
-      source : Debounce((answers: any, keyword: string) => searchMaintainer(keyword), 300),
+      source : Debounce((answers: Answers, keyword: string) => searchMaintainer(keyword), 300),
     },
     {
       name   : 'confirm',
@@ -62,7 +70,7 @@ export default async function finishTask (): Promise<void> {
     throw new CancelError()
 
   const hasMR   = await hasOpenedMR(answer.issue)
-  const canMove = answer.issue.issue.labels.includes('Doing')
+  const canMove = answer.issue.issue?.labels.includes('Doing')
   const tasks   = new Listr([
     {
       title: 'Push to remote repository',

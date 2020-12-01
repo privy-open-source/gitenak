@@ -15,13 +15,20 @@ import { truncate } from 'lodash'
 import { CancelError } from '../core/error'
 import { searchFiles } from '../modules/commit'
 
+interface Answers {
+  files: string[]
+  type: 'changed' | 'added' | 'fixed' | 'deleted'
+  message: string
+  confirm: boolean
+}
+
 export default async function commit (): Promise<void> {
   const unstages = await searchFiles()
 
   if (unstages.length === 0)
     return console.warn('Nothing to commit, working tree clean')
 
-  const result = await inquirer.prompt([
+  const result = await inquirer.prompt<Answers>([
     {
       name    : 'files',
       type    : 'checkbox',

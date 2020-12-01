@@ -7,6 +7,9 @@ export const menus = [
   { name: 'Commit Change', value: 'commit' },
   { name: 'Discard Change', value: 'discard' },
   new Separator(),
+  { name: 'Pull', value: 'pull' },
+  { name: 'Push', value: 'push' },
+  new Separator(),
   { name: 'Quit', value: 'quit' },
 ]
 

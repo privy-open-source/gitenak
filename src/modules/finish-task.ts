@@ -4,14 +4,16 @@ import { useContext } from '../core/context'
 import { useRepo } from '../core/repo'
 import { formatTitle, renderLabel } from '../core/utils'
 import Choice from 'inquirer/lib/objects/choice'
+import { Issue as GitlabIssue } from '../../types/gitlab'
 import { green } from 'kleur'
 
-interface Issue {
+export interface Issue {
   iid: number
   title: string
   type: string
   branch: string
   active: boolean
+  issue: GitlabIssue
 }
 
 export async function searchIssue (keyword?: string): Promise<Choice[]> {
@@ -25,22 +27,20 @@ export async function searchIssue (keyword?: string): Promise<Choice[]> {
   if (keyword)
     parameters.search = keyword
 
-  const repo       = useRepo()
-  const references = await repo.getReferences()
-  const current    = await repo.getCurrentBranch()
-  const regex      = /refs\/heads\/((feature|bugfix|hotfix)\/(\d+)-([\w-]+))/
+  const repo     = useRepo()
+  const branches = await repo.branchLocal()
+  const regex    = /(feature|bugfix|hotfix)\/(\d+)-([\w-]+)/
 
-  const indexes: Map<number, Issue> = new Map()
+  const indexes: Map<number, Partial<Issue>> = new Map()
 
-  for (const reference of references) {
-    const match = regex.exec(reference.name())
+  for (const branch of branches.all) {
+    const match = regex.exec(branch)
 
     if (match) {
-      const branch = match[1]
-      const type   = match[2]
-      const iid    = Number.parseInt(match[3])
-      const title  = startCase(match[4])
-      const active = current.name() === reference.name()
+      const type   = match[1]
+      const iid    = Number.parseInt(match[2])
+      const title  = startCase(match[3])
+      const active = branches.current === branch
 
       indexes.set(iid, {
         branch,

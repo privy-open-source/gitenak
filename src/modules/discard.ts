@@ -3,16 +3,16 @@ import { promises as fs } from 'fs'
 
 export async function discardFile (files: string[]): Promise<void> {
   const repo   = useRepo()
-  const status = await repo.getStatus({ pathspec: files })
+  const status = await repo.status(files)
 
   const revert: string[]  = []
   const deleted: string[] = []
 
-  for (const file of status) {
-    if (file.isNew())
-      deleted.push(file.path())
+  for (const file of status.files) {
+    if (file.working_dir === '?')
+      deleted.push(file.path)
     else
-      revert.push(file.path())
+      revert.push(file.path)
   }
 
   if (revert.length > 0)
